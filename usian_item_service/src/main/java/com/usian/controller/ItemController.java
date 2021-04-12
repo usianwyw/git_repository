@@ -2,6 +2,7 @@ package com.usian.controller;
 
 import com.usian.pojo.TbItem;
 import com.usian.service.ItemService;
+import com.usian.utils.PageResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,5 +21,11 @@ public class ItemController {
     public TbItem selectItemInfo(Long itemId){
         return this.itemService.selectItemInfo(itemId);
     }
+ @RequestMapping("selectTbItemAllByPage")
+    public PageResult selectTbItemAllByPage(Integer page,Integer rows){
+
+     return this.itemService.selectTbItemAllByPage(page,rows);
+ }
+
 
 }
