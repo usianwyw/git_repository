@@ -36,4 +36,12 @@ public class ItemController {
     public Map<String,Object> preUpdateItem(Long itemId){
         return this.itemService.preUpdateItem(itemId);
     }
+    @RequestMapping("/updateTbItem")
+    public Integer updateTbItem(@RequestBody TbItem tbItem,String desc,String itemParams){
+        return this.itemService.updateTbItem(tbItem,desc,itemParams);
+    }
+    @RequestMapping("/deleteItemById")
+    public Integer deleteItemById(Long itemId){
+        return this.itemService.deleteItemById(itemId);
+    }
 }

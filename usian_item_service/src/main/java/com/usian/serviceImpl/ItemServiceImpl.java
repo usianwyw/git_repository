@@ -105,5 +105,34 @@ public class ItemServiceImpl implements ItemService {
         }
         return map;
     }
+
+    @Override
+    public Integer updateTbItem(TbItem tbItem, String desc, String itemParams) {
+        Date date = new Date();
+        tbItem.setStatus((byte)1);
+        tbItem.setUpdated(date);
+        int i1 = tbItemMapper.updateByPrimaryKey(tbItem);
+
+        TbItemDesc tbItemDesc = new TbItemDesc();
+        tbItemDesc.setItemDesc(desc);
+        tbItemDesc.setCreated(date);
+        tbItemDesc.setUpdated(date);
+        int i2 = tbItemDescMapper.updateByPrimaryKey(tbItemDesc);
+
+        TbItemParamItem tbItemParamItem = new TbItemParamItem();
+        tbItemParamItem.setCreated(date);
+        tbItemParamItem.setParamData(itemParams);
+        tbItemParamItem.setUpdated(date);
+        int i3 = tbItemParamItemMapper.updateByPrimaryKey(tbItemParamItem);
+        return i1+i2+i3;
+    }
+
+    @Override
+    public Integer deleteItemById(Long itemId) {
+       TbItem tbItem = tbItemMapper.selectByPrimaryKey(itemId);
+        tbItem.setStatus((byte)0);
+        int i = tbItemMapper.updateByPrimaryKeySelective(tbItem);
+        return i;
+    }
 }
 
