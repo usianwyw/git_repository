@@ -1,5 +1,6 @@
 package com.usian.mapper;
 
+import com.usian.pojo.TbItemCatExample;
 import com.usian.pojo.TbItemParam;
 import com.usian.pojo.TbItemParamExample;
 import org.apache.ibatis.annotations.Param;

@@ -6,6 +6,8 @@ import com.usian.utils.PageResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/service/item")
 public class ItemController {
@@ -26,6 +28,12 @@ public class ItemController {
 
      return this.itemService.selectTbItemAllByPage(page,rows);
  }
-
-
+@RequestMapping("/insertTbItem")
+    public Integer insertTbItem(@RequestBody TbItem tbItem,String desc,String itemParams){
+        return this.itemService.insertTbItem(tbItem,desc,itemParams);
+}
+    @RequestMapping("/preUpdateItem")
+    public Map<String,Object> preUpdateItem(Long itemId){
+        return this.itemService.preUpdateItem(itemId);
+    }
 }
