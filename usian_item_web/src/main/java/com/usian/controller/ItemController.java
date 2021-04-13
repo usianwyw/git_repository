@@ -63,11 +63,11 @@ public class ItemController {
         return Result.error("修改失败");
     }
     @RequestMapping("deleteItemById")
-    public Result deleteItemById(Long itemId){
-        Integer integer= itemServiceFeign.deleteItemById(itemId);
-        if (integer==1){
-            return Result.ok();
-        }
+        public Result deleteItemById(Long itemId){
+            Integer integer= itemServiceFeign.deleteItemById(itemId);
+            if (integer==1){
+                return Result.ok();
+            }
         return Result.error("删除失败");
     }
 }

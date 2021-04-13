@@ -1,10 +1,11 @@
 package com.usian.serviceImpl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.usian.mapper.TbItemParamMapper;
-import com.usian.pojo.TbItemCatExample;
-import com.usian.pojo.TbItemParam;
-import com.usian.pojo.TbItemParamExample;
+import com.usian.pojo.*;
 import com.usian.service.ItemParamService;
+import com.usian.utils.PageResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,5 +25,19 @@ public class ItemParamServiceImpl implements ItemParamService {
             return list.get(0);
         }
         return null;
+    }
+
+    @Override
+    public PageResult selectTbItemAllByPage(Integer page, Integer rows) {
+        PageHelper.startPage(page,rows);
+        TbItemParamExample tbItemParamExample= new TbItemParamExample();
+        tbItemParamExample.setOrderByClause("updated DESC");
+        List<TbItemParam> tbItemList=tbItemParamMapper.selectByExample(tbItemParamExample);
+        PageInfo<TbItemParam> tbItemPageInfo = new PageInfo<>(tbItemList);
+        PageResult pageResult = new PageResult();
+        pageResult.setResult(tbItemPageInfo.getList());
+        pageResult.setTotalPage(Long.valueOf(tbItemPageInfo.getNavigatePages()));
+        pageResult.setPageIndex(tbItemPageInfo.getPageNum());
+        return pageResult;
     }
 }
