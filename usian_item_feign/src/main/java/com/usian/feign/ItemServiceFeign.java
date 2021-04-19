@@ -3,6 +3,8 @@ package com.usian.feign;
 import com.usian.pojo.TbItem;
 import com.usian.pojo.TbItemCat;
 import com.usian.pojo.TbItemParam;
+import com.usian.utils.AdNode;
+import com.usian.utils.CatResult;
 import com.usian.utils.PageResult;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -31,4 +33,13 @@ public interface ItemServiceFeign {
     Integer deleteItemById(@RequestParam("itemId") Long itemId);
     @RequestMapping("/service/itemParam/selectItemParamAll")
     PageResult selectItemParamAll(@RequestParam Integer page,@RequestParam Integer rows);
+    @RequestMapping("/service/itemParam/insertItemParam")
+    Integer insertItemParam(@RequestParam Long itemCatId,@RequestParam String paramData);
+    @RequestMapping("/service/itemParam/deleteItemParamById")
+    Integer deleteItemParamById(@RequestParam Long id);
+    @RequestMapping("/service/itemParam/selectItemCategoryAll")
+    CatResult selectItemCategoryAll();
+    @RequestMapping("/service/itemParam/selectFrontendContentByAD")
+    List<AdNode> selectFrontendContentByAD();
+
 }

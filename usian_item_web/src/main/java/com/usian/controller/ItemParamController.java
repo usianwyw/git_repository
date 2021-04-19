@@ -32,4 +32,22 @@ public class ItemParamController {
         }
         return Result.error("查无结果");
     }
+
+    @RequestMapping("insertItemParam")
+    public Result insertItemParam(Long itemCatId,String paramData){
+        Integer num= itemServiceFeign.insertItemParam(itemCatId,paramData);
+        if (num==1){
+            return Result.ok();
+        }
+        return Result.error("添加失败");
+    }
+    @RequestMapping("deleteItemParamById")
+    public Result deleteItemParamById(Long id){
+        Integer integer= itemServiceFeign.deleteItemParamById(id);
+        if (integer==1){
+            return Result.ok();
+        }
+        return Result.error("删除失败");
+    }
+
 }

@@ -31,10 +31,10 @@ public class ItemController {
     @RequestMapping("selectTbItemAllByPage")
     public Result selectTbItemAllByPage(@RequestParam(defaultValue = "1") Integer page,
                                         @RequestParam(defaultValue = "10") Integer rows){
-       PageResult pageResult= itemServiceFeign.selectTbItemAllByPage(page,rows);
-       if (pageResult.getResult()!=null && pageResult.getResult().size()>0){
-           return Result.ok(pageResult);
-       }
+        PageResult pageResult= itemServiceFeign.selectTbItemAllByPage(page,rows);
+        if (pageResult.getResult()!=null && pageResult.getResult().size()>0){
+            return Result.ok(pageResult);
+        }
         return Result.error("查无结果");
     }
     @RequestMapping("insertTbItem")
