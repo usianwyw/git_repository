@@ -6,13 +6,15 @@ import com.usian.mapper.TbItemDescMapper;
 import com.usian.mapper.TbItemMapper;
 import com.usian.mapper.TbItemParamItemMapper;
 import com.usian.pojo.*;
+import com.usian.redis.RedisClient;
 import com.usian.service.ItemService;
 import com.usian.utils.IDUtils;
 import com.usian.utils.PageResult;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +33,39 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private TbItemCatMapper tbItemCatMapper;
 
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+    @Value("${ITEM_INFO}")
+    private String ITEM_INFO;
+
+    @Value("${BASE}")
+    private String BASE;
+
+    @Value("${DESC}")
+    private String DESC;
+
+    @Value("${ITEM_INFO_EXPIRE}")
+    private Integer ITEM_INFO_EXPIRE;
+
+    @Autowired
+    private RedisClient redisClient;
+
+
     @Override
     public TbItem selectItemInfo(Long itemId) {
-        return tbItemMapper.selectByPrimaryKey(itemId);
+        //查询缓存
+        TbItem tbItem = (TbItem) redisClient.get(ITEM_INFO + ":" + itemId + ":"+ BASE);
+        if(tbItem!=null){
+            return tbItem;
+        }
+
+        tbItem = tbItemMapper.selectByPrimaryKey(itemId);
+        //把数据保存到缓存
+        redisClient.set(ITEM_INFO + ":" + itemId + ":"+ BASE,tbItem);
+        //设置缓存的有效期
+        redisClient.expire(ITEM_INFO + ":" + itemId + ":"+ BASE,ITEM_INFO_EXPIRE);
+
+        return tbItem;
     }
 
     @Override
@@ -58,28 +90,35 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Integer insertTbItem(TbItem tbItem, String desc, String itemParams) {
-        long itemId = IDUtils.genItemId();
+        Long itemId = IDUtils.genItemId();
         Date date = new Date();
         tbItem.setId(itemId);
         tbItem.setStatus((byte)1);
         tbItem.setUpdated(date);
         tbItem.setCreated(date);
-        int i1 = tbItemMapper.insert(tbItem);
+        Integer tbItemNum = tbItemMapper.insertSelective(tbItem);
 
+        //补齐商品描述对象
         TbItemDesc tbItemDesc = new TbItemDesc();
         tbItemDesc.setItemId(itemId);
         tbItemDesc.setItemDesc(desc);
         tbItemDesc.setCreated(date);
         tbItemDesc.setUpdated(date);
-        int i2 = tbItemDescMapper.insert(tbItemDesc);
+        Integer tbitemDescNum = tbItemDescMapper.insertSelective(tbItemDesc);
 
+        //补齐商品规格参数
         TbItemParamItem tbItemParamItem = new TbItemParamItem();
         tbItemParamItem.setItemId(itemId);
-        tbItemParamItem.setCreated(date);
         tbItemParamItem.setParamData(itemParams);
         tbItemParamItem.setUpdated(date);
-        int i3 = tbItemParamItemMapper.insert(tbItemParamItem);
-        return i1+i2+i3;
+        tbItemParamItem.setCreated(date);
+        Integer itemParamItmeNum =
+                tbItemParamItemMapper.insertSelective(tbItemParamItem);
+
+        //添加商品发布消息到mq
+        amqpTemplate.convertAndSend("item_exchage","item.add", itemId);
+
+        return tbItemNum + tbitemDescNum + itemParamItmeNum;
 
     }
 
@@ -126,7 +165,6 @@ public class ItemServiceImpl implements ItemService {
         int i3 = tbItemParamItemMapper.updateByPrimaryKey(tbItemParamItem);
         return i1+i2+i3;
     }
-
     @Override
     public Integer deleteItemById(Long itemId) {
        TbItem tbItem = tbItemMapper.selectByPrimaryKey(itemId);
@@ -134,5 +172,28 @@ public class ItemServiceImpl implements ItemService {
         int i = tbItemMapper.updateByPrimaryKeySelective(tbItem);
         return i;
     }
-}
 
+    @Override
+    public TbItemDesc selectItemDescByItemId(Long itemId) {
+        TbItemDesc tbItemDesc = (TbItemDesc) redisClient.get(
+                ITEM_INFO + ":" + itemId + ":"+ DESC);
+        if(tbItemDesc!=null){
+            return tbItemDesc;
+        }
+
+        TbItemDescExample example = new TbItemDescExample();
+        TbItemDescExample.Criteria criteria = example.createCriteria();
+        criteria.andItemIdEqualTo(itemId);
+        List<TbItemDesc> itemDescList =
+                this.tbItemDescMapper.selectByExampleWithBLOBs(example);
+        if(itemDescList!=null && itemDescList.size()>0){
+            //把数据保存到缓存
+            redisClient.set(ITEM_INFO + ":" + itemId + ":"+ DESC,itemDescList.get(0));
+            //设置缓存的有效期
+            redisClient.expire(ITEM_INFO + ":" + itemId + ":"+ DESC,ITEM_INFO_EXPIRE);
+            return itemDescList.get(0);
+        }
+        return null;
+    }
+
+}

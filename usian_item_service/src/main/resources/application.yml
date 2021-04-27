@@ -7,6 +7,14 @@ spring:
     username: root
     password: 123
     type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    host: 127.0.0.1
+    port: 6379
+  rabbitmq:
+    host: 192.168.2.101
+    username: admin
+    password: admin
+    virtual-host: /
 server:
   port: 8090
 eureka:
@@ -19,3 +27,14 @@ AD_HEIGHT: 240
 AD_WIDTH: 670
 AD_HEIGHTB: 240
 AD_WIDTHB: 550
+#配置缓存首页商品分类的 key
+PROTAL_CATRESULT_KEY: PROTAL_CATRESULT_KEY
+
+PORTAL_AD_KEY: PORTAL_AD_KEY
+
+#商品详情
+ITEM_INFO: ITEM_INFO
+BASE: BASE
+DESC: DESC
+PARAM: PARAM
+ITEM_INFO_EXPIRE: 86400

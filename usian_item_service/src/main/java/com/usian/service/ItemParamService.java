@@ -1,6 +1,7 @@
 package com.usian.service;
 
 import com.usian.pojo.TbItemParam;
+import com.usian.pojo.TbItemParamItem;
 import com.usian.utils.AdNode;
 import com.usian.utils.CatResult;
 import com.usian.utils.PageResult;
@@ -19,4 +20,6 @@ public interface ItemParamService {
     CatResult selectItemCategoryAll();
 
     List<AdNode> selectFrontendContentByAD();
+
+    TbItemParamItem selectTbItemParamItemByItemId(Long itemId);
 }

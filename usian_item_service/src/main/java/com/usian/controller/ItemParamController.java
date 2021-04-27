@@ -2,6 +2,7 @@ package com.usian.controller;
 
 import com.usian.pojo.TbItem;
 import com.usian.pojo.TbItemParam;
+import com.usian.pojo.TbItemParamItem;
 import com.usian.service.ItemParamService;
 import com.usian.utils.AdNode;
 import com.usian.utils.CatResult;
@@ -43,5 +44,9 @@ public class ItemParamController {
     @RequestMapping("selectFrontendContentByAD")
     public List<AdNode> selectFrontendContentByAD(){
         return this.itemParamService.selectFrontendContentByAD();
+    }
+    @RequestMapping("/selectTbItemParamItemByItemId")
+    public TbItemParamItem selectTbItemParamItemByItemId(@RequestParam Long itemId){
+        return itemParamService.selectTbItemParamItemByItemId(itemId);
     }
 }

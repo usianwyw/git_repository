@@ -4,8 +4,10 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.usian.mapper.TbContentMapper;
 import com.usian.mapper.TbItemCatMapper;
+import com.usian.mapper.TbItemParamItemMapper;
 import com.usian.mapper.TbItemParamMapper;
 import com.usian.pojo.*;
+import com.usian.redis.RedisClient;
 import com.usian.service.ItemParamService;
 import com.usian.utils.AdNode;
 import com.usian.utils.CatNode;
@@ -27,6 +29,8 @@ public class ItemParamServiceImpl implements ItemParamService {
    private TbItemCatMapper tbItemCatMapper;
    @Autowired
    private TbContentMapper tbContentMapper;
+    @Autowired
+    private RedisClient redisClient;
 
     @Value("${AD_CATEGORY_ID}")
     private Long AD_CATEGORY_ID;
@@ -42,6 +46,24 @@ public class ItemParamServiceImpl implements ItemParamService {
 
     @Value("${AD_WIDTHB}")
     private Integer AD_WIDTHB;
+
+    @Value("${PROTAL_CATRESULT_KEY}")
+    private String protal_catresult_redis_key;
+
+    @Value("${PORTAL_AD_KEY}")
+    private String PORTAL_AD_KEY;
+
+    @Value("${ITEM_INFO}")
+    private String ITEM_INFO;
+
+    @Value("${PARAM}")
+    private String PARAM;
+
+    @Value("${ITEM_INFO_EXPIRE}")
+    private Integer ITEM_INFO_EXPIRE;
+
+    @Autowired
+    private TbItemParamItemMapper tbItemParamItemMapper;
 
     @Override
     public TbItemParam selectItemParamByItemCatId(Long itemCatId) {
@@ -98,22 +120,38 @@ public class ItemParamServiceImpl implements ItemParamService {
     }
 
     @Override
-        public CatResult selectItemCategoryAll(){
-            CatResult catResult = new CatResult();
-            //查询商品分类
-            catResult.setData(getCatList(0L));
-            return catResult;
-
+    public CatResult selectItemCategoryAll() {
+        //查询缓存
+        CatResult catResultRedis =
+                (CatResult)redisClient.get(protal_catresult_redis_key);
+        if(catResultRedis!=null){
+            return catResultRedis;
         }
+        CatResult catResult = new CatResult();
+        //查询商品分类
+        catResult.setData(getCatList(0L));
+
+        //添加到缓存
+        redisClient.set(protal_catresult_redis_key,catResult);
+
+        return catResult;
+    }
 
     @Override
     public List<AdNode> selectFrontendContentByAD() {
+        //查询缓存
+        List<AdNode> adNodeListRedis =
+                (List<AdNode>)redisClient.hget(PORTAL_AD_KEY,AD_CATEGORY_ID.toString());
+        if(adNodeListRedis!=null){
+            return adNodeListRedis;
+        }
+        // 查询数据库
         TbContentExample tbContentExample = new TbContentExample();
         TbContentExample.Criteria criteria = tbContentExample.createCriteria();
         criteria.andCategoryIdEqualTo(AD_CATEGORY_ID);
         List<TbContent> tbContentList =
                 tbContentMapper.selectByExample(tbContentExample);
-        List<AdNode> adNodeList = new ArrayList<>();
+        List<AdNode> adNodeList = new ArrayList<AdNode>();
         for (TbContent tbContent : tbContentList) {
             AdNode adNode = new AdNode();
             adNode.setSrc(tbContent.getPic());
@@ -125,7 +163,33 @@ public class ItemParamServiceImpl implements ItemParamService {
             adNode.setWidthB(AD_WIDTHB);
             adNodeList.add(adNode);
         }
+        //添加到缓存
+        redisClient.hset(PORTAL_AD_KEY,AD_CATEGORY_ID.toString(),adNodeList);
         return adNodeList;
+    }
+
+    @Override
+    public TbItemParamItem selectTbItemParamItemByItemId(Long itemId) {
+        TbItemParamItem tbItemParamItem = (TbItemParamItem) redisClient.get(
+                ITEM_INFO + ":" + itemId + ":"+ PARAM);
+        if(tbItemParamItem!=null){
+            return tbItemParamItem;
+        }
+
+        TbItemParamItemExample example = new TbItemParamItemExample();
+        TbItemParamItemExample.Criteria criteria = example.createCriteria();
+        criteria.andItemIdEqualTo(itemId);
+        List<TbItemParamItem> tbItemParamItemList =
+                tbItemParamItemMapper.selectByExampleWithBLOBs(example);
+        if(tbItemParamItemList!=null && tbItemParamItemList.size()>0){
+            //把数据保存到缓存
+            redisClient.set(ITEM_INFO + ":" + itemId + ":"+
+                    PARAM,tbItemParamItemList.get(0));
+            //设置缓存的有效期
+            redisClient.expire(ITEM_INFO + ":" + itemId + ":"+ PARAM,ITEM_INFO_EXPIRE);
+            return tbItemParamItemList.get(0);
+        }
+        return null;
     }
 
     private List<?> getCatList(Long parentId){

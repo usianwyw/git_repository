@@ -1,8 +1,6 @@
 package com.usian.feign;
 
-import com.usian.pojo.TbItem;
-import com.usian.pojo.TbItemCat;
-import com.usian.pojo.TbItemParam;
+import com.usian.pojo.*;
 import com.usian.utils.AdNode;
 import com.usian.utils.CatResult;
 import com.usian.utils.PageResult;
@@ -41,5 +39,8 @@ public interface ItemServiceFeign {
     CatResult selectItemCategoryAll();
     @RequestMapping("/service/itemParam/selectFrontendContentByAD")
     List<AdNode> selectFrontendContentByAD();
-
+    @RequestMapping("/service/itemParam/selectItemDescByItemId")
+    TbItemDesc selectItemDescByItemId(Long itemId);
+    @RequestMapping("/service/itemParam/selectTbItemParamItemByItemId")
+    TbItemParamItem selectTbItemParamItemByItemId(Long itemId);
 }
